@@ -1,5 +1,5 @@
 import math
-from tkinter import Canvas
+from tkinter import Canvas, messagebox
 
 # Astronomical Units ( converted to meters )
 AU = 149.6e6 * 1000
@@ -56,7 +56,8 @@ class ObjectManager:
         mass = self.config[0].get()
         
         if(mass == ""):
-            raise ValueError("Object requires Mass") 
+            messagebox.showerror("Error", "Object must have mass.") 
+            return
 
         new_object = CelestialObject(
             Vector2(event.x, event.y), 
