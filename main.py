@@ -1,4 +1,5 @@
 from tkinter import Canvas, Tk, ttk
+from celestialobject import ObjectManager
 
 
 WIDTH, HEIGHT = 1200, 675
@@ -9,10 +10,8 @@ class OrbitSimulation:
         self.root = root
         self.root.title("Orbit Simulation - github.com/JustinGnatiuk")
         self.root.resizable(0,0)
-        self.root.minsize(WIDTH,HEIGHT)
-        self.root.maxsize(WIDTH,HEIGHT)
         self.canvas = None
-        self.orbit_manager = None
+        self.object_manager = None
 
         self.build_gui()
 
@@ -24,17 +23,25 @@ class OrbitSimulation:
         main_container.pack_propagate(False)
 
         # Create Simulation Canvas
-        self.canvas = Canvas(main_container, width=WIDTH-250, height=HEIGHT, bg='black')
-        self.canvas.pack(side='left', fill='both', expand=True)
+        self.canvas = Canvas(main_container, width=WIDTH-300, height=HEIGHT, bg='black')
+        self.canvas.pack(side='left', fill='both', expand=False)
         
         # Create Side Configuration Bar
-        side_config = ttk.Frame(main_container, width=250)
+        side_config = ttk.Frame(main_container, width=300)
         side_config.pack(side='right', fill='y', expand=False)
         side_config.pack_propagate(False)
+        title_label = ttk.Label(
+            side_config, 
+            text="Python Orbit Simulator", 
+            anchor='center',
+            font=('Arial', 14, 'bold underline')
+            )
+        title_label.pack(side='top', fill='x', pady=(10,20))
 
     def start(self):
         if self.canvas is None:
             raise ValueError("orbitSim requires a Canvas to run orbital simulation")
+        self.orbit_simulator = ObjectManager(self.canvas)
 
 
 
