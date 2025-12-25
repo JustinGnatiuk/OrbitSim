@@ -1,5 +1,5 @@
 from tkinter import Canvas, Tk, ttk
-from celestialobject import ObjectManager
+from celestialobject import ObjectManager, Vector2, AU
 
 
 WIDTH, HEIGHT = 1200, 675
@@ -63,7 +63,9 @@ class OrbitSimulation:
         if self.canvas is None:
             raise ValueError("orbitSim requires a Canvas to run orbital simulation")
         self.orbit_simulator = ObjectManager(self.canvas, self.object_config)
-        self.orbit_simulator.spawn_sun(WIDTH-300, HEIGHT)
+        self.orbit_simulator.spawn_sun()
+        # add earth by default for testing
+        self.orbit_simulator.spawn_object_hard(Vector2(-1 * AU, 0) , 15,  5.9742 * 10**24, "Earth")
         self.orbit_simulator.update_objects()
 
 

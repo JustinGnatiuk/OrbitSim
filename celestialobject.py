@@ -1,6 +1,9 @@
 import math
 from tkinter import Canvas, messagebox
 
+
+# Canvas Dimensions
+WIDTH, HEIGHT = 900, 675
 # Astronomical Units ( converted to meters )
 AU = 149.6e6 * 1000
 # Gravitational Constant
@@ -23,21 +26,36 @@ class Vector2:
     def __add__(self, other):
         return Vector2(self.x + other.x, self.y + other.y)
 
+    def __iadd__(self, other):
+        if isinstance(other, Vector2):
+            self.x += other.x
+            self.y += other.y
+            return self
+        if isinstance(other, (int, float)):
+            self.x += other
+            self.y += other
+            return self
+
     def __sub__(self, other):
         return Vector2(self.x - other.x, self.y - other.y)
 
     def __mul__(self, other):
         if isinstance(other, Vector2):
             return Vector2(self.x * other.x, self.y * other.y)
-            
+        if isinstance(other, (int, float)):
+            return Vector2(self.x * other, self.y * other)
+
     def __truediv__(self, other):
         if isinstance(other, Vector2):
             return Vector2(self.x / other.x, self.y / other.y)
         if isinstance(other, (int, float)):
             return Vector2(self.x / other, self.y / other)
 
+    def __repr__(self) -> str:
+        return f"({self.x}, {self.y})"
+
     def distance_to(self, other):
-        return math.sqrt((other.x - self.x) ** 2, (other.y - self.y) ** 2)
+        return math.sqrt((other.x - self.x) ** 2 + (other.y - self.y) ** 2)
 
 
 
@@ -49,7 +67,9 @@ class CelestialObject:
                 mass: int, 
                 tag: str,
                 ) -> None:
-        self.center = Vector2(origin.x, origin.y)
+
+        self.real_position = Vector2(origin.x, origin.y)
+        self.center = Vector2(0, 0)
         self.canvas = canvas
         self.radius = radius
         self.mass = mass
@@ -60,30 +80,43 @@ class CelestialObject:
         self.color = "white"
         self.tag = tag
 
-    def draw(self):
+        self.update_screen_position()
+
+    def update_screen_position(self):
+
+        # Scale center position relative to canvas center
+        self.center.x = self.real_position.x * SCALE + WIDTH / 2
+        self.center.y = self.real_position.y * SCALE + HEIGHT / 2
+
+    def __repr__(self) -> str:
+        return f"{self.tag}"
+
+    def draw(self, center):
+        self.canvas.delete(self.tag)
         x1 = self.center.x - self.radius
         y1 = self.center.y - self.radius
         x2 = self.center.x + self.radius
         y2 = self.center.y + self.radius
-        self.canvas.create_oval(x1, y1, x2, y2, fill="black", outline=self.color)
+        self.canvas.create_oval(x1, y1, x2, y2, fill="black", outline=self.color, tags=(self.tag))
 
     def attraction(self, other):
 
         # calculate distance between 2 objects
-        distance_x = other.center.x - self.center.x
-        distance_y = other.center.y - self.center.y
-        distance = self.center.distance_to(other.center)
+        distance_x = other.real_position.x - self.real_position.x
+        distance_y = other.real_position.y - self.real_position.y
+        distance = self.real_position.distance_to(other.real_position)
 
         # if other is sun, calculate distance to sun
         if( other.sun ):
             self.distance_to_sun = distance
 
-        force = ( G * self.mass * other.mass ) / distance ** 2
-        theta = math.atan2(distance_x, distance_y)
+        force = G * self.mass * other.mass / distance ** 2
+        theta = math.atan2(distance_y, distance_x)
         force_x = math.cos(theta) * force
-        forcy_y = math.sin(theta) * force
+        force_y = math.sin(theta) * force
 
         return force_x, force_y
+
 
     # Sum force of attraction between current object and all other celestial objects
     def update_position(self, planets):
@@ -99,7 +132,10 @@ class CelestialObject:
 
         self.velocity += Vector2(total_force_x, total_force_y) / self.mass * TIMESTEP
 
-        self.center += self.velocity * TIMESTEP
+        self.real_position += self.velocity * TIMESTEP
+
+        self.update_screen_position()
+
         self.orbit.append(self.center)
 
 class ObjectManager:
@@ -108,10 +144,10 @@ class ObjectManager:
         self.celestialObjects = []
         self.config = config
 
-        self.canvas.bind("<Button-1>", self.spawn_object)
+        self.canvas.bind("<Button-1>", self.spawn_objectClick)
 
-    # Spawn Celestial Object ( a Circle )
-    def spawn_object(self, event):
+    # Spawn Celestial Object ( a Circle ) from click on canvas
+    def spawn_objectClick(self, event):
         
         # Grab config info from config entries
         mass = self.config[0].get()
@@ -124,8 +160,11 @@ class ObjectManager:
             messagebox.showerror("Error","Object must have a tag (Name)")
             return
 
+        real_x = (event.x - WIDTH/2) / SCALE
+        real_y = (event.y - HEIGHT/2) / SCALE
+
         new_object = CelestialObject(
-            Vector2(event.x, event.y), 
+            Vector2(real_x, real_y), 
             self.canvas,
             10,
             mass,
@@ -133,18 +172,29 @@ class ObjectManager:
         )
         self.celestialObjects.append(new_object)
         new_object.draw()
+    
+    # Spawn Celestial Object ( a Circle ) with hardcoded values
+    def spawn_object_hard(self, center, radius, mass, tag):
 
-    def spawn_sun(self, width, height):
+        new_object = CelestialObject(
+            center,
+            self.canvas,
+            radius,
+            mass,
+            tag
+        )
+        if(tag == "Earth"):
+            new_object.velocity = Vector2(0, 29.783 * 1000)
+        self.celestialObjects.append(new_object)
+
+
+    def spawn_sun(self):
         
         # mass of the sun
         mass = 1.98892 * 10**30
 
-        # calculate center of canvas
-        x = width // 2
-        y = height // 2
-
         new_object = CelestialObject(
-            Vector2(x, y),
+            Vector2(0, 0),
             self.canvas,
             20,
             mass,
@@ -157,6 +207,8 @@ class ObjectManager:
 
     def update_objects(self):
 
-        for planet in celestialObjects:
+        for planet in self.celestialObjects:
+            print(f"updating {planet} - Position ({planet.center.x, planet.center.y}) - Velocity ({planet.velocity.x, planet.velocity.y}) - DistanceToSun: {planet.distance_to_sun}")
+            planet.draw(planet.center)
             planet.update_position(self.celestialObjects)
-            planet.draw()
+        self.canvas.after(100, self.update_objects)
