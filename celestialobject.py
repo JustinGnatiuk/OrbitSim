@@ -166,10 +166,11 @@ class ObjectManager:
             messagebox.showerror("Error","Object must have a tag (Name)")
             return
 
-
+        # Calculate real coordinate distance
         real_x = (event.x - WIDTH/2) / SCALE
         real_y = (event.y - HEIGHT/2) / SCALE
 
+        # Create new celestial object
         new_object = CelestialObject(
             Vector2(real_x, real_y), 
             self.canvas,
