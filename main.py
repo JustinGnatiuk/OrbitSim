@@ -46,16 +46,23 @@ class OrbitSimulation:
 
         # Object mass label and entry form
         mass_label = ttk.Label(form_frame, text='Mass:', anchor='w', font=('Arial', 12))
-        mass_label.grid(row=0, column=0, sticky='w', padx=(5, 0), pady=5)
+        mass_label.grid(row=0, column=0, sticky='w', padx=(5,0), pady=5)
         mass_entry = ttk.Entry(form_frame, width=15)
-        mass_entry.grid(row=0, column=1, sticky='w', padx=(5, 0), pady=5)
+        mass_entry.grid(row=0, column=1, sticky='w', padx=(5,0), pady=5)
         self.object_config.append(mass_entry)
+
+        # Object initial velocity label and entry form
+        initial_velocity = ttk.Label(form_frame, text="Initial Velocity: ", anchor='w', font=('Arial', 12))
+        initial_velocity.grid(row=1, column=0, sticky='w', padx=(5,0), pady=5)
+        initial_velocity_entry = ttk.Entry(form_frame, width=15)
+        initial_velocity_entry.grid(row=1, column=1, sticky='w', padx=(5,0), pady=5)
+        self.object_config.append(initial_velocity_entry)
 
         # Object tag label and entry form
         tag_label = ttk.Label(form_frame, text="Tag:", anchor='w', font=('Arial', 12))
-        tag_label.grid(row=1, column=0, sticky='w', padx=(5, 0), pady=5)
+        tag_label.grid(row=2, column=0, sticky='w', padx=(5,0), pady=5)
         tag_entry = ttk.Entry(form_frame, width=15)
-        tag_entry.grid(row=1, column=1, sticky='w', padx=(5, 0), pady=5)
+        tag_entry.grid(row=2, column=1, sticky='w', padx=(5,0), pady=5)
         self.object_config.append(tag_entry)
 
         
@@ -65,7 +72,12 @@ class OrbitSimulation:
         self.orbit_simulator = ObjectManager(self.canvas, self.object_config)
         self.orbit_simulator.spawn_sun()
         # add earth by default for testing
-        self.orbit_simulator.spawn_object_hard(Vector2(-1 * AU, 0) , 15,  5.9742 * 10**24, "Earth")
+        self.orbit_simulator.spawn_object_hard(Vector2(-1 * AU, 0),
+                                               15,
+                                               5.9742 * 10**24,
+                                               Vector2(0, 29.783 * 1000),
+                                               "Earth"
+                                               )
         self.orbit_simulator.update_objects()
 
 
