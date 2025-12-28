@@ -271,9 +271,20 @@ class ObjectManager:
 
     def update_objects(self):
 
+        orbit_option = self.config[3].instate(['selected'])
+
+        print(f"orbit option: {orbit_option}")
+
         for planet in self.celestialObjects:
+
             planet.draw(planet.center)
             planet.update_position(self.celestialObjects)
-            if(planet.tag != "Sun"):
+            # Draw orbits
+            if(planet.tag != "Sun" and orbit_option):
                 planet.draw_orbit()
+            # if orbit option deselected, remove orbit lines
+            if( not orbit_option and planet.orbit_line_id ):
+                self.canvas.delete(f"{planet.tag}_orbit")
+                planet.orbit_line_id = None
+
         self.canvas.after(100, self.update_objects)

@@ -1,4 +1,4 @@
-from tkinter import Canvas, Tk, ttk
+from tkinter import Canvas, Tk, ttk, IntVar
 from celestialobject import ObjectManager, Vector2, AU
 
 
@@ -64,6 +64,12 @@ class OrbitSimulation:
         tag_entry = ttk.Entry(form_frame, width=15)
         tag_entry.grid(row=2, column=1, sticky='w', padx=(5,0), pady=5)
         self.object_config.append(tag_entry)
+
+        # Orbit Lines label and button
+        orbit_var = IntVar()
+        orbit_option = ttk.Checkbutton(form_frame, text="Draw Orbits ", variable=orbit_var)
+        orbit_option.grid(row=3, column=0, sticky='w', padx=(5,0), pady=5)
+        self.object_config.append(orbit_option)
 
         
     def start(self):
