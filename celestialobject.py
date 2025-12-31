@@ -1,5 +1,6 @@
 import math
-from tkinter import Canvas, messagebox
+import tkinter as tk
+from tkinter import Tk, Canvas, messagebox
 
 
 # Canvas Dimensions
@@ -266,6 +267,10 @@ class ObjectManager:
             tag
         )
         self.celestialObjects.append(new_object)
+
+        self.config[0].delete(0, tk.END)
+        self.config[1].delete(0, tk.END)
+        self.config[2].delete(0, tk.END)
     
     # Spawn Celestial Object ( a Circle ) with hardcoded values
     def spawn_object_hard(self, center, radius, mass, initial_v, tag):
