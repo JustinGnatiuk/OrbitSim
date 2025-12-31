@@ -13,6 +13,38 @@ SCALE = 200 / AU # 1 AU = 250 pixels
 # 1 day time step
 TIMESTEP = 3600*24
 
+# Convert mass and velocity entry expressions to float values
+def expression_convert(expression):
+
+    if expression is None:
+        return None
+
+    expression = str(expression).strip().replace(' ', '')
+
+    # If expression is already a simple float
+    try:
+        return float(expression)
+    except ValueError:
+        pass
+
+    # Replace exponent notations and multiplication characters
+    expression = expression.replace('x10^', '*10**')
+    expression = expression.replace('x10**', '*10**')
+    expression = expression.replace('^', '**')
+    expression = expression.replace('x', '*')
+
+    # Character security check
+    allowed_chars = set("0123456789.*")
+    if not all(c in allowed_chars for c in expression.replace('**', '')):
+        raise ValueError("Invalid Expression, forbidden characters present")
+
+    # evaluate sanitized expression
+    try:
+        return float(eval(expression, {"__builtins__": {}}, {}))
+    except:
+        raise ValueError("Invalid Expression")
+     
+
 class Vector2:
     def __init__(self, x, y) -> None:
         self.x, self.y = x, y
@@ -56,7 +88,6 @@ class Vector2:
 
     def distance_to(self, other):
         return math.sqrt((other.x - self.x) ** 2 + (other.y - self.y) ** 2)
-
 
 
 class CelestialObject:
@@ -182,20 +213,6 @@ class CelestialObject:
         if len(self.orbit) > 1000:
             self.orbit = self.orbit[-1000:]
 
-        #print(f"\n=== Drawing orbit for {self.tag} ===")
-        #print(f"Orbit has {len(self.orbit)} points")
-        ## Check if all points are the same
-        #if len(self.orbit) > 1:
-        #    first = self.orbit[0]
-        #    last = self.orbit[-1]
-        #print(f"First point: ({first.x}, {first.y})")
-        #print(f"Last point: ({last.x}, {last.y})")
-        #print(f"Are they the same object? {first is last}")
-        #print(f"Are they equal? {first.x == last.x and first.y == last.y}")
-    #
-        #coords = [coord for v in self.orbit for coord in (v.x, v.y)]
-        #print(f"Coordinates (first 8): {coords[:8]}")
-
 class ObjectManager:
     def __init__(self, canvas: Canvas, config: list) -> None:
         self.canvas = canvas
@@ -211,7 +228,7 @@ class ObjectManager:
         mass = self.config[0].get()             # This returns a string btw
         initial_velocity = self.config[1].get()
         tag = self.config[2].get()
-        
+
         if(mass == ""):
             messagebox.showerror("Error", "Object must have mass.") 
             return
@@ -220,6 +237,19 @@ class ObjectManager:
             return
         if(tag == ""):
             messagebox.showerror("Error","Object must have a tag (Name)")
+            return
+
+        # Convert mass and velocity expressions
+        try:
+            mass = expression_convert(mass)
+        except ValueError as e:
+            messagebox.showerror("Error", f"{e} (mass)")
+            return
+
+        try:
+            initial_velocity = expression_convert(initial_velocity)
+        except ValueError as e:
+            messagebox.showerror("Error", f"{e} (initial velocity)")
             return
 
         # Calculate real coordinate distance
@@ -231,8 +261,8 @@ class ObjectManager:
             Vector2(real_x, real_y), 
             self.canvas,
             10,
-            float(mass),
-            Vector2(0, float(initial_velocity)),
+            mass,
+            Vector2(0, initial_velocity),
             tag
         )
         self.celestialObjects.append(new_object)
