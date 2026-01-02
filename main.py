@@ -71,6 +71,8 @@ class OrbitSimulation:
         orbit_option.grid(row=3, column=0, sticky='w', padx=(5,0), pady=5)
         self.object_config.append(orbit_option)
 
+    def add_planet(self, name, semi_major_axis_au, eccentricity, mass, radius, start_angle_deg=0, at_perihelion=True):
+        return
         
     def start(self):
         if self.canvas is None:
