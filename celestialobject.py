@@ -153,6 +153,7 @@ class CelestialObject:
         # if other is sun, calculate distance to sun
         if( other.sun ):
             self.distance_to_sun = distance
+            print(f"Distance to sun: {self.distance_to_sun}")
 
         # Attraction force operations
         force = G * self.mass * other.mass / distance ** 2
@@ -182,6 +183,7 @@ class CelestialObject:
 
         # Increment position based on velocity and time
         self.real_position += self.velocity * TIMESTEP
+
 
         # Calculate position on screen based on real position
         self.update_screen_position()

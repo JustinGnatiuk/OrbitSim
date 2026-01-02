@@ -1,5 +1,6 @@
+import math
 from tkinter import Canvas, Tk, ttk, IntVar
-from celestialobject import ObjectManager, Vector2, AU
+from celestialobject import ObjectManager, Vector2, AU, G
 
 
 WIDTH, HEIGHT = 1200, 675
@@ -72,41 +73,82 @@ class OrbitSimulation:
         self.object_config.append(orbit_option)
 
     def add_planet(self, name, semi_major_axis_au, eccentricity, mass, radius, start_angle_deg=0, at_perihelion=True):
-        return
         
+        """
+        Add planet with realistic orbital parameters
+
+        semi_major_axis_au: Semi-major axis in AU
+        eccentricity: orbital eccentricity (0=circular)
+        mass: mass in kg
+        radius: visual radius of planet
+        start_angle_deg: starting angular position (0 degrees = positive x axis)
+        at_perihelion: true if starting at closest point to sun
+        """
+
+        sun_mass = 1.98892 * 10**30
+
+        if at_perihelion:
+            # Perihelion distance = a(1-e)
+            distance = semi_major_axis_au * AU * (1 - eccentricity)
+            # speed at perihelion from vis-viva equation: v squared = GM(2/r - 1/a)
+            a = semi_major_axis_au * AU # Convert to meters
+            speed = math.sqrt(G * sun_mass * (2/distance - 1/a))
+        else:
+            # Aphelion distance = a(1+e)
+            distance = semi_major_axis_au * AU * (1 + eccentricity)
+            a = semi_major_axis_au * AU
+            speed = math.sqrt(G * sun_mass * (2/distance - 1/a))
+
+        angle = math.radians(start_angle_deg)
+        position = Vector2(distance * math.cos(angle), distance * math.sin(angle))
+
+        # Tangiental velocity ( perpendicular to radius )
+        velocity = Vector2(-speed * math.sin(angle), speed * math.cos(angle))
+
+        self.orbit_simulator.spawn_object_hard(
+            position,
+            radius,
+            mass,
+            velocity,
+            name
+        )
+
+        
+
     def start(self):
         if self.canvas is None:
             raise ValueError("orbitSim requires a Canvas to run orbital simulation")
         self.orbit_simulator = ObjectManager(self.canvas, self.object_config)
         self.orbit_simulator.spawn_sun()
         # add earth by default for testing
-        self.orbit_simulator.spawn_object_hard(Vector2(-1 * AU, 0),
-                                               15,
-                                               5.9742 * 10**24,
-                                               Vector2(0, 29.783 * 1000),
-                                               "Earth"
-                                               )
-        # add venus by default for testing
-        self.orbit_simulator.spawn_object_hard(Vector2(0.723 * AU, 0),
-                                               10,
-                                               4.8685 * 10**24,
-                                               Vector2(0, -35.02 * 1000),
-                                               "Venus"
-                                               )
-        # add mercury by default for testing
-        self.orbit_simulator.spawn_object_hard(Vector2(0.387 * AU, 0),
-                                               10,
-                                               3.30 * 10**23,
-                                               Vector2(0, -47.4 * 1000),
-                                               "Mercury"
-                                               )
-        # add Mars by default for testing
-        self.orbit_simulator.spawn_object_hard(Vector2(-1.524 * AU, 0),
-                                               12,
-                                               6.39 * 10**23,
-                                               Vector2(0, 24.077 * 1000),
-                                               "Mars"
-                                               )
+        
+        #self.orbit_simulator.spawn_object_hard(Vector2(-1 * AU, 0),
+        #                                       15,
+        #                                       5.9742 * 10**24,
+        #                                       Vector2(0, 29.783 * 1000),
+        #                                       "Earth"
+        #                                       )
+        ## add venus by default for testing
+        #self.orbit_simulator.spawn_object_hard(Vector2(0.723 * AU, 0),
+        #                                       10,
+        #                                       4.8685 * 10**24,
+        #                                       Vector2(0, -35.02 * 1000),
+        #                                       "Venus"
+        #                                       )
+        ## add mercury by default for testing
+        #self.orbit_simulator.spawn_object_hard(Vector2(0.387 * AU, 0),
+        #                                       10,
+        #                                       3.30 * 10**23,
+        #                                       Vector2(0, -47.4 * 1000),
+        #                                       "Mercury"
+        #                                       )
+        ## add Mars by default for testing
+        #self.orbit_simulator.spawn_object_hard(Vector2(-1.524 * AU, 0),
+        #                                       12,
+        #                                       6.39 * 10**23,
+        #                                       Vector2(0, 24.077 * 1000),
+        #                                       "Mars"
+        #                                       )
         self.orbit_simulator.update_objects()
 
 
