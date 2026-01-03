@@ -77,7 +77,7 @@ class OrbitSimulation:
         """
         Add planet with realistic orbital parameters
 
-        semi_major_axis_au: Semi-major axis in AU
+        semi_major_axis_au: length of Semi-major axis in AU
         eccentricity: orbital eccentricity (0=circular)
         mass: mass in kg
         radius: visual radius of planet
@@ -122,6 +122,10 @@ class OrbitSimulation:
         self.orbit_simulator.spawn_sun()
         # add earth by default for testing
         self.add_planet("Earth", 1.000, 0.0167, 5.9742e24, 12, 90, False)
+        # add some of the other planets for testing
+        self.add_planet("Mercury", 0.387, 0.2056, 3.30e23, 8, 0, True)
+        self.add_planet("Venus", 0.723, 0.0068, 4.8685e24, 10, 45, False)
+        self.add_planet("Mars", 1.524, 0.0934, 6.39e23, 10, 135, True)
 
         #self.orbit_simulator.spawn_object_hard(Vector2(-1 * AU, 0),
         #                                       15,
