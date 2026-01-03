@@ -121,7 +121,8 @@ class OrbitSimulation:
         self.orbit_simulator = ObjectManager(self.canvas, self.object_config)
         self.orbit_simulator.spawn_sun()
         # add earth by default for testing
-        
+        self.add_planet("Earth", 1.000, 0.0167, 5.9742e24, 12, 90, False)
+
         #self.orbit_simulator.spawn_object_hard(Vector2(-1 * AU, 0),
         #                                       15,
         #                                       5.9742 * 10**24,
