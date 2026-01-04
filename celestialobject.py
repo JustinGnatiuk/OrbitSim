@@ -37,6 +37,7 @@ def expression_convert(expression):
     # Character security check
     allowed_chars = set("0123456789.*")
     if not all(c in allowed_chars for c in expression.replace('**', '')):
+        print(expression)
         raise ValueError("Invalid Expression, forbidden characters present")
 
     # evaluate sanitized expression
@@ -216,7 +217,7 @@ class CelestialObject:
             self.orbit = self.orbit[-1000:]
 
 class ObjectManager:
-    def __init__(self, canvas: Canvas, config: list) -> None:
+    def __init__(self, canvas: Canvas, config: dict) -> None:
         self.canvas = canvas
         self.celestialObjects = []
         self.config = config
@@ -227,9 +228,9 @@ class ObjectManager:
     def spawn_objectClick(self, event):
         
         # Grab config info from config entries
-        mass = self.config[0].get()             # This returns a string btw
-        initial_velocity = self.config[1].get()
-        tag = self.config[2].get()
+        mass = self.config['mass'].get()                          # This returns a string btw
+        initial_velocity = self.config['initial_velocity'].get()  # This returns a string btw
+        tag = self.config['mass'].get()
 
         if(mass == ""):
             messagebox.showerror("Error", "Object must have mass.") 
@@ -269,9 +270,11 @@ class ObjectManager:
         )
         self.celestialObjects.append(new_object)
 
-        self.config[0].delete(0, tk.END)
-        self.config[1].delete(0, tk.END)
-        self.config[2].delete(0, tk.END)
+        new_object.draw(new_object.center)
+
+        self.config['mass'].delete(0, tk.END)
+        self.config['initial_velocity'].delete(0, tk.END)
+        self.config['tag'].delete(0, tk.END)
     
     # Spawn Celestial Object ( a Circle ) with hardcoded values
     def spawn_object_hard(self, center, radius, mass, initial_v, tag):
@@ -307,18 +310,19 @@ class ObjectManager:
 
     def update_objects(self):
 
-        orbit_option = self.config[3].instate(['selected'])
+        if ( not self.config['pause'] ):
+            orbit_option = self.config['draw_orbit'].get()
 
-        for planet in self.celestialObjects:
+            for planet in self.celestialObjects:
 
-            planet.draw(planet.center)
-            planet.update_position(self.celestialObjects)
-            # Draw orbits
-            if(planet.tag != "Sun" and orbit_option):
-                planet.draw_orbit()
-            # if orbit option deselected, remove orbit lines
-            if( not orbit_option and planet.orbit_line_id ):
-                self.canvas.delete(f"{planet.tag}_orbit")
-                planet.orbit_line_id = None
+                planet.draw(planet.center)
+                planet.update_position(self.celestialObjects)
+                # Draw orbits
+                if(planet.tag != "Sun" and orbit_option):
+                    planet.draw_orbit()
+                # if orbit option deselected, remove orbit lines
+                if( not orbit_option and planet.orbit_line_id ):
+                    self.canvas.delete(f"{planet.tag}_orbit")
+                    planet.orbit_line_id = None
 
         self.canvas.after(100, self.update_objects)

@@ -13,7 +13,13 @@ class OrbitSimulation:
         self.root.resizable(0,0)
         self.canvas = None
         self.object_manager = None
-        self.object_config = []
+        self.object_config = {
+            'mass' : None,
+            'initial_velocity' : None,
+            'tag' : None,
+            'draw_orbit' : None,
+            'pause' : 0
+        }
 
         self.build_gui()
 
@@ -50,27 +56,43 @@ class OrbitSimulation:
         mass_label.grid(row=0, column=0, sticky='w', padx=(5,0), pady=5)
         mass_entry = ttk.Entry(form_frame, width=15)
         mass_entry.grid(row=0, column=1, sticky='w', padx=(5,0), pady=5)
-        self.object_config.append(mass_entry)
+        self.object_config['mass'] = mass_entry
 
         # Object initial velocity label and entry form
         initial_velocity = ttk.Label(form_frame, text="Initial Velocity: ", anchor='w', font=('Arial', 12))
         initial_velocity.grid(row=1, column=0, sticky='w', padx=(5,0), pady=5)
         initial_velocity_entry = ttk.Entry(form_frame, width=15)
         initial_velocity_entry.grid(row=1, column=1, sticky='w', padx=(5,0), pady=5)
-        self.object_config.append(initial_velocity_entry)
-
+        self.object_config['initial_velocity'] = initial_velocity_entry
+        
         # Object tag label and entry form
         tag_label = ttk.Label(form_frame, text="Tag:", anchor='w', font=('Arial', 12))
         tag_label.grid(row=2, column=0, sticky='w', padx=(5,0), pady=5)
         tag_entry = ttk.Entry(form_frame, width=15)
         tag_entry.grid(row=2, column=1, sticky='w', padx=(5,0), pady=5)
-        self.object_config.append(tag_entry)
-
+        self.object_config['tag'] = tag_entry
+        
         # Orbit Lines label and button
         orbit_var = IntVar()
         orbit_option = ttk.Checkbutton(form_frame, text="Draw Orbits ", variable=orbit_var)
         orbit_option.grid(row=3, column=0, sticky='w', padx=(5,0), pady=5)
-        self.object_config.append(orbit_option)
+        self.object_config['draw_orbit'] = orbit_var
+
+        # Orbit pause/unpause button
+        orbit_pause = ttk.Button(form_frame, text="Pause", command=self.toggle_pause)
+        orbit_pause.config(command=lambda: self.toggle_pause(orbit_pause))
+        orbit_pause.grid(row=3, column=1, sticky='w', padx=(5,0), pady=5)
+
+
+    def toggle_pause(self, pause_button):
+        if( self.object_config['pause'] ):
+            pause_button.config(text="Pause")
+            self.object_config['pause'] = 0
+            print("Continuing sim...")
+        else:
+            pause_button.config(text="Continue")
+            self.object_config['pause'] = 1
+            print("Pausing sim...")
 
     def add_planet(self, name, semi_major_axis_au, eccentricity, mass, radius, start_angle_deg=0, at_perihelion=True):
         
