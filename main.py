@@ -148,34 +148,7 @@ class OrbitSimulation:
         self.add_planet("Mercury", 0.387, 0.2056, 3.30e23, 8, 0, True)
         self.add_planet("Venus", 0.723, 0.0068, 4.8685e24, 10, 45, False)
         self.add_planet("Mars", 1.524, 0.0934, 6.39e23, 10, 135, True)
-
-        #self.orbit_simulator.spawn_object_hard(Vector2(-1 * AU, 0),
-        #                                       15,
-        #                                       5.9742 * 10**24,
-        #                                       Vector2(0, 29.783 * 1000),
-        #                                       "Earth"
-        #                                       )
-        ## add venus by default for testing
-        #self.orbit_simulator.spawn_object_hard(Vector2(0.723 * AU, 0),
-        #                                       10,
-        #                                       4.8685 * 10**24,
-        #                                       Vector2(0, -35.02 * 1000),
-        #                                       "Venus"
-        #                                       )
-        ## add mercury by default for testing
-        #self.orbit_simulator.spawn_object_hard(Vector2(0.387 * AU, 0),
-        #                                       10,
-        #                                       3.30 * 10**23,
-        #                                       Vector2(0, -47.4 * 1000),
-        #                                       "Mercury"
-        #                                       )
-        ## add Mars by default for testing
-        #self.orbit_simulator.spawn_object_hard(Vector2(-1.524 * AU, 0),
-        #                                       12,
-        #                                       6.39 * 10**23,
-        #                                       Vector2(0, 24.077 * 1000),
-        #                                       "Mars"
-        #                                       )
+                                     
         self.orbit_simulator.update_objects()
 
 
