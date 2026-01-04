@@ -142,10 +142,6 @@ class OrbitSimulation:
             raise ValueError("orbitSim requires a Canvas to run orbital simulation")
         self.orbit_simulator = ObjectManager(self.canvas, self.object_config)
         self.orbit_simulator.spawn_sun()
-        self.orbit_simulator.spawn_object_hard(
-            Vector2(0,0),
-            20,
-        )
         # add earth by default for testing
         self.add_planet("Earth", 1.000, 0.0167, 5.9742e24, 12, 90, False)
         # add some of the other planets for testing
