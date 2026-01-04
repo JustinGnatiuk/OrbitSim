@@ -230,7 +230,7 @@ class ObjectManager:
         # Grab config info from config entries
         mass = self.config['mass'].get()                          # This returns a string btw
         initial_velocity = self.config['initial_velocity'].get()  # This returns a string btw
-        tag = self.config['mass'].get()
+        tag = self.config['tag'].get()
 
         if(mass == ""):
             messagebox.showerror("Error", "Object must have mass.") 
