@@ -16,13 +16,13 @@ class SimulationSettings():
         # Zoom Factor
         self.zoom = 1.0
         # pixels per AU
-        self.base_pixels_per_au = 250
+        self.base_pixels_per_au = 50
         # 1 day time step
         self.TIMESTEP = 3600*24
 
     @property
     def SCALE(self):
-        return (self.base_pixels_per_au / self.AU) / self.zoom
+        return (self.base_pixels_per_au * self.zoom / self.AU) 
 
 class OrbitSimulation:
     def __init__(self,root):
@@ -105,15 +105,54 @@ class OrbitSimulation:
         # zoom scale slider
         zoom_scale = tk.Scale(
             form_frame,
-            from_=0.1,
+            from_=0.5,
             to=2.5,
             resolution=0.1,
             orient=tk.HORIZONTAL,
             label="Zoom Scale",
-            length=200
+            length=200,
+            command=self.update_zoom
         )
         zoom_scale.set(1.0) # default zoom
         zoom_scale.grid(row=4, column=0, sticky='w', padx=(5,0), pady=5, columnspan=2)
+
+        # Create a frame specifically for planet info in bottom right
+        info_frame = ttk.LabelFrame(side_config, text="Planet Information", padding="10")
+        info_frame.pack(side=tk.LEFT, padx=10, pady=10)
+
+        # Create labels to display planet information
+        # You can customize these based on what data you want to show
+        self.info_labels = {}
+
+        # Planet name/tag
+        self.info_labels['tag'] = ttk.Label(info_frame, text="Tag: None", font=('Arial', 10, 'bold'))
+        self.info_labels['tag'].pack(anchor=tk.W, pady=(0, 5))
+
+        # Mass information
+        self.info_labels['mass'] = ttk.Label(info_frame, text="Mass: 0.0")
+        self.info_labels['mass'].pack(anchor=tk.W)
+
+        # Velocity information
+        self.info_labels['velocity'] = ttk.Label(info_frame, text="Velocity: (0.0, 0.0)")
+        self.info_labels['velocity'].pack(anchor=tk.W)
+
+        # Position information
+        self.info_labels['position'] = ttk.Label(info_frame, text="Position: (0.0, 0.0)")
+        self.info_labels['position'].pack(anchor=tk.W)
+
+        # Distance from center/origin
+        self.info_labels['distance'] = ttk.Label(info_frame, text="Distance from Sun: 0.0")
+        self.info_labels['distance'].pack(anchor=tk.W, pady=(5, 0))
+
+    def update_zoom(self, value):
+        # update simulation settings zoom value
+        self.simulation_settings.zoom = float(value)
+        # remove all orbits for redraw
+        for planet in self.orbit_simulator.celestialObjects:
+            self.canvas.delete(f"{planet.tag}_orbit")
+            planet.orbit_line_id = None
+            planet.orbit = []
+            planet.update_radius()
 
 
     def toggle_pause(self, pause_button):
@@ -143,14 +182,14 @@ class OrbitSimulation:
 
         if at_perihelion:
             # Perihelion distance = a(1-e)
-            distance = semi_major_axis_au * AU * (1 - eccentricity)
+            distance = semi_major_axis_au * self.simulation_settings.AU * (1 - eccentricity)
             # speed at perihelion from vis-viva equation: v squared = GM(2/r - 1/a)
-            a = semi_major_axis_au * AU # Convert to meters
+            a = semi_major_axis_au * self.simulation_settings.AU # Convert to meters
             speed = math.sqrt(G * sun_mass * (2/distance - 1/a))
         else:
             # Aphelion distance = a(1+e)
-            distance = semi_major_axis_au * AU * (1 + eccentricity)
-            a = semi_major_axis_au * AU
+            distance = semi_major_axis_au * self.simulation_settings.AU * (1 + eccentricity)
+            a = semi_major_axis_au * self.simulation_settings.AU
             speed = math.sqrt(G * sun_mass * (2/distance - 1/a))
 
         angle = math.radians(start_angle_deg)
@@ -175,11 +214,16 @@ class OrbitSimulation:
         self.orbit_simulator = ObjectManager(self.canvas, self.object_config, self.simulation_settings)
         self.orbit_simulator.spawn_sun()
         # add earth by default for testing
-        self.add_planet("Earth", 1.000, 0.0167, 5.9742e24, 9, 90, False)
+        self.add_planet("Earth", 1.000, 0.0167, 5.9742e24, 8, 90, False)
         # add some of the other planets for testing
-        self.add_planet("Mercury", 0.387, 0.2056, 3.30e23, 7, 0, True)
-        self.add_planet("Venus", 0.723, 0.0068, 4.8685e24, 7, 45, False)
-        self.add_planet("Mars", 1.524, 0.0934, 6.39e23, 9, 135, True)
+        self.add_planet("Mercury", 0.387, 0.2056, 3.30e23, 5, 0, True)
+        self.add_planet("Venus", 0.723, 0.0068, 4.8685e24, 5, 45, False)
+        self.add_planet("Mars", 1.524, 0.0934, 6.39e23, 8, 135, True)
+        self.add_planet("Jupiter", 5.203, 0.0489, 1.898e27, 20, 180, False)
+        self.add_planet("Saturn", 9.537, 0.0539, 5.683e26, 18, 225, False)
+        # These planets are too far for the canvas scaling
+        #self.add_planet("Uranus", 19.191, 0.0473, 8.681e25, 15, 270, False)
+        #self.add_planet("Neptune", 30.069, 0.0086, 1.024e26, 15, 315, False)
                                      
         self.orbit_simulator.update_objects()
 

@@ -108,6 +108,7 @@ class CelestialObject:
         self.real_position = Vector2(origin.x, origin.y)
         self.center = Vector2(0, 0)
         self.canvas = canvas
+        self.base_radius = radius
         self.radius = radius
         self.mass = mass
         self.velocity = velocity
@@ -237,6 +238,9 @@ class CelestialObject:
         if len(self.orbit) > 1000:
             self.orbit = self.orbit[-1000:]
 
+    def update_radius(self):
+        self.radius = self.settings.zoom * self.base_radius
+
 class ObjectManager:
     def __init__(self, canvas: Canvas, config: dict, settings) -> None:
         self.canvas = canvas
@@ -328,7 +332,7 @@ class ObjectManager:
         new_object = CelestialObject(
             Vector2(0, 0),
             self.canvas,
-            12,
+            10,
             mass,
             Vector2(0,0),
             "Sun",
@@ -356,4 +360,4 @@ class ObjectManager:
                     self.canvas.delete(f"{planet.tag}_orbit")
                     planet.orbit_line_id = None
 
-        self.canvas.after(100, self.update_objects)
+        self.canvas.after(50, self.update_objects)
