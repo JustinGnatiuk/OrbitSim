@@ -175,6 +175,8 @@ class OrbitSimulation:
             planet.orbit_line_id = None
             planet.orbit = []
             planet.update_radius()
+            planet.update_screen_position()
+            planet.draw()
 
 
     def toggle_pause(self, pause_button):
