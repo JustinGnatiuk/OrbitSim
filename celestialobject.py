@@ -95,7 +95,8 @@ class Vector2:
 
 
 class CelestialObject:
-    def __init__(self, 
+    def __init__(
+                self, 
                 origin: Vector2, 
                 canvas: Canvas, 
                 radius: int,
@@ -239,7 +240,13 @@ class CelestialObject:
         self.radius = self.settings.zoom * self.base_radius
 
 class ObjectManager:
-    def __init__(self, canvas: Canvas, config: dict, settings, update_callback=None) -> None:
+    def __init__(
+                self, 
+                canvas: Canvas, 
+                config: dict, 
+                settings, 
+                update_callback=None
+                ) -> None:
         self.canvas = canvas
         self.celestialObjects = []
         self.config = config
