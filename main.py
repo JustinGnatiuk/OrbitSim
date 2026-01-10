@@ -179,6 +179,7 @@ class OrbitSimulation:
         self.info_labels['distance'].config(text="Distance from Sun: 0.0")
 
     def update_zoom(self, value):
+        
         # update simulation settings zoom value
         self.simulation_settings.zoom = float(value)
         # remove all orbits for redraw
