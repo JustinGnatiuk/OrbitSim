@@ -1,7 +1,7 @@
 import math
 import tkinter as tk
 from tkinter import Canvas, Tk, ttk, IntVar
-from celestialobject import ObjectManager, Vector2, AU, G
+from celestialobject import ObjectManager, Vector2
 
 
 WIDTH, HEIGHT = 1200, 675
@@ -19,6 +19,8 @@ class SimulationSettings():
         self.base_pixels_per_au = 200
         # 1 day time step
         self.TIMESTEP = 3600*24
+        # simulation speed in ms
+        self.SPEED = 50
 
     @property
     def SCALE(self):
@@ -71,35 +73,46 @@ class OrbitSimulation:
         form_frame.pack(fill='both', expand=True, anchor='nw', padx=0)
 
         # Object mass label and entry form
-        mass_label = ttk.Label(form_frame, text='Mass:', anchor='w', font=('Arial', 12))
+        mass_label = ttk.Label(form_frame, text='Mass (kg):', anchor='w', font=('Arial', 12))
         mass_label.grid(row=0, column=0, sticky='w', padx=(5,0), pady=5)
         mass_entry = ttk.Entry(form_frame, width=15)
         mass_entry.grid(row=0, column=1, sticky='w', padx=(5,0), pady=5)
         self.object_config['mass'] = mass_entry
 
-        # Object initial velocity label and entry form
-        initial_velocity = ttk.Label(form_frame, text="Initial Velocity: ", anchor='w', font=('Arial', 12))
-        initial_velocity.grid(row=1, column=0, sticky='w', padx=(5,0), pady=5)
-        initial_velocity_entry = ttk.Entry(form_frame, width=15)
-        initial_velocity_entry.grid(row=1, column=1, sticky='w', padx=(5,0), pady=5)
-        self.object_config['initial_velocity'] = initial_velocity_entry
+        # Object initial velocity in x direction label and entry form
+        initial_velocity_x = ttk.Label(form_frame, text="Velocity x (km/s): ", anchor='w', font=('Arial', 12))
+        initial_velocity_x.grid(row=1, column=0, sticky='w', padx=(5,0), pady=5)
+        initial_velocity_x_entry = ttk.Entry(form_frame, width=15)
+        initial_velocity_x_entry.grid(row=1, column=1, sticky='w', padx=(5,0), pady=5)
+        self.object_config['initial_velocity_x'] = initial_velocity_x_entry
+
+        # Object initial velocity in y direction label and entry form
+        initial_velocity_y = ttk.Label(form_frame, text="Velocity y (km/s): ", anchor='w', font=('Arial', 12))
+        initial_velocity_y.grid(row=2, column=0, sticky='w', padx=(5,0), pady=5)
+        initial_velocity_y_entry = ttk.Entry(form_frame, width=15)
+        initial_velocity_y_entry.grid(row=2, column=1, sticky='w', padx=(5,0), pady=5)
+        self.object_config['initial_velocity_y'] = initial_velocity_y_entry
         
         # Object tag label and entry form
         tag_label = ttk.Label(form_frame, text="Tag:", anchor='w', font=('Arial', 12))
-        tag_label.grid(row=2, column=0, sticky='w', padx=(5,0), pady=5)
+        tag_label.grid(row=3, column=0, sticky='w', padx=(5,0), pady=5)
         tag_entry = ttk.Entry(form_frame, width=15)
-        tag_entry.grid(row=2, column=1, sticky='w', padx=(5,0), pady=5)
+        tag_entry.grid(row=3, column=1, sticky='w', padx=(5,0), pady=5)
         self.object_config['tag'] = tag_entry
         
         # Orbit Lines label and button
         orbit_var = IntVar()
         orbit_option = ttk.Checkbutton(form_frame, text="Draw Orbits ", variable=orbit_var)
-        orbit_option.grid(row=3, column=0, sticky='w', padx=(5,0), pady=5)
+        orbit_option.grid(row=4, column=0, sticky='w', padx=(5,0), pady=5)
         self.object_config['draw_orbit'] = orbit_var
 
         # Orbit pause/unpause button
         orbit_pause = ttk.Button(form_frame, text="Pause", command=lambda: self.toggle_pause(orbit_pause))
-        orbit_pause.grid(row=3, column=1, sticky='w', padx=(5,0), pady=5)
+        orbit_pause.grid(row=4, column=1, sticky='w', padx=(5,0), pady=5)
+
+        # Spawn planets button
+        spawn_planets = ttk.Button(form_frame, text="Spawn Planets", command=self.spawn_planets)
+        spawn_planets.grid(row=5, column=0, sticky='w', padx=(5,0), pady=5)
 
         # zoom scale slider
         zoom_scale = tk.Scale(
@@ -113,7 +126,21 @@ class OrbitSimulation:
             command=self.update_zoom
         )
         zoom_scale.set(1.0) # default zoom
-        zoom_scale.grid(row=4, column=0, sticky='w', padx=(5,0), pady=5, columnspan=2)
+        zoom_scale.grid(row=6, column=0, sticky='w', padx=(5,0), pady=5, columnspan=2)
+
+        # speed slider
+        speed_scale = tk.Scale(
+            form_frame,
+            from_=10,
+            to=100,
+            resolution=10,
+            orient=tk.HORIZONTAL,
+            label="Speed ( ms )",
+            length=200,
+            command=self.update_speed
+        )
+        speed_scale.set(50) # default speed in ms
+        speed_scale.grid(row=7, column=0, sticky='w', padx=(5,0), pady=5, columnspan=2)
 
         # Create a frame specifically for planet info in bottom right
         info_frame = ttk.LabelFrame(side_config, text="Planet Information", padding="10", width=100)
@@ -143,9 +170,9 @@ class OrbitSimulation:
         self.info_labels['distance'] = ttk.Label(info_frame, text="Distance from Sun: 0.0")
         self.info_labels['distance'].pack(anchor=tk.W, pady=(5, 0))
 
-        # Spawn planets button
-        spawn_planets = ttk.Button(form_frame, text="Spawn Planets", command=self.spawn_planets)
-        spawn_planets.grid(row=5, column=0, sticky='w', padx=(5,0), pady=5)
+        # Clear planets button
+        clear_planets = ttk.Button(form_frame, text="Clear Planets", command=self.clear_planets)
+        clear_planets.grid(row=8, column=0, sticky='w', padx=(5,0), pady=5)
 
     def update_planet_info(self, planet):
         
@@ -191,6 +218,13 @@ class OrbitSimulation:
             planet.update_screen_position()
             planet.draw()
 
+    def clear_planets(self):
+        
+        self.orbit_simulator.clear_planets()
+            
+
+    def update_speed(self, value):
+        self.simulation_settings.SPEED = value
 
     def toggle_pause(self, pause_button):
         if( self.object_config['pause'] ):
@@ -222,12 +256,12 @@ class OrbitSimulation:
             distance = semi_major_axis_au * self.simulation_settings.AU * (1 - eccentricity)
             # speed at perihelion from vis-viva equation: v squared = GM(2/r - 1/a)
             a = semi_major_axis_au * self.simulation_settings.AU # Convert to meters
-            speed = math.sqrt(G * sun_mass * (2/distance - 1/a))
+            speed = math.sqrt(self.simulation_settings.G * sun_mass * (2/distance - 1/a))
         else:
             # Aphelion distance = a(1+e)
             distance = semi_major_axis_au * self.simulation_settings.AU * (1 + eccentricity)
             a = semi_major_axis_au * self.simulation_settings.AU
-            speed = math.sqrt(G * sun_mass * (2/distance - 1/a))
+            speed = math.sqrt(self.simulation_settings.G * sun_mass * (2/distance - 1/a))
 
         angle = math.radians(start_angle_deg)
         position = Vector2(distance * math.cos(angle), distance * math.sin(angle))

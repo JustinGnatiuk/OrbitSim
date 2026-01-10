@@ -5,16 +5,6 @@ from tkinter import Tk, Canvas, messagebox
 
 # Canvas Dimensions
 WIDTH, HEIGHT = 900, 675
-# Astronomical Units ( converted to meters )
-AU = 149.6e6 * 1000
-# Gravitational Constant
-G = 6.67428e-11
-# Zoom Factor
-Zoom = 1
-# Scale factor
-SCALE = ( Zoom * 100 ) / AU # 1 AU = 100 pixels
-# 1 day time step
-TIMESTEP = 3600*24
 
 # Convert mass and velocity entry expressions to float values
 def expression_convert(expression):
@@ -121,12 +111,14 @@ class CelestialObject:
         self.color = "white"
         self.tag = tag
         self.object_manager = object_manager
+        self.orbital_length = 100000
 
+        self.update_radius()
         self.update_screen_position()
 
         self.canvas.tag_bind(self.tag, "<Enter>", self.on_enter)
         self.canvas.tag_bind(self.tag, "<Button-1>", self.on_click)
-        self.canvas.tag_bind(self.tag, "<Button-3>", self.delete_planet)
+        self.canvas.tag_bind(self.tag, "<Button-3>", self.delete_planet_onClick)
 
     def update_screen_position(self):
 
@@ -138,7 +130,7 @@ class CelestialObject:
         return f"{self.tag}"
 
     def on_enter(self, event):
-        print(f"{self.tag}")
+        return
 
     def on_click(self, event):
         self.object_manager.update_callback(self)
@@ -175,7 +167,7 @@ class CelestialObject:
             self.distance_to_sun = distance
 
         # Attraction force operations
-        force = G * self.mass * other.mass / distance ** 2
+        force = self.object_manager.settings.G * self.mass * other.mass / distance ** 2
         theta = math.atan2(distance_y, distance_x)
         force_x = math.cos(theta) * force
         force_y = math.sin(theta) * force
@@ -231,14 +223,24 @@ class CelestialObject:
             # Update existing orbit line
             self.canvas.coords(self.orbit_line_id, *coords)
 
-        # Limit orbit points to prevent bloat
-        if len(self.orbit) > 1000:
-            self.orbit = self.orbit[-1000:]
+        # Limit orbit points to prevent overlap
+        current_x = round(self.orbit[-1].x, 2)
+        initial_x = round(self.orbit[0].x, 2)
+        current_y = round(self.orbit[-1].y, 2)
+        initial_y = round(self.orbit[0].y, 2)
+        
+        # Check difference between current orbit coordinates and initial
+        if(len(self.orbit) > 50):
+            if( round(abs(current_x - initial_x) , 2) < 3 and round(abs(current_y - initial_y) , 2) < 3):
+                self.orbital_length = len(self.orbit)
+            self.orbit = self.orbit[-self.orbital_length:]
+            
+
 
     def update_radius(self):
         self.radius = self.object_manager.settings.zoom * self.base_radius
 
-    def delete_planet(self, event):
+    def delete_planet_onClick(self, event):
         
         # Do not remove sun
         if( self.sun ):
@@ -303,15 +305,19 @@ class ObjectManager:
             return
         else:
             # Grab config info from config entries
-            mass = self.config['mass'].get()                          # This returns a string btw
-            initial_velocity = self.config['initial_velocity'].get()  # This returns a string btw
+            mass = self.config['mass'].get()                              # This returns a string btw
+            initial_velocity_x = self.config['initial_velocity_x'].get()  # This returns a string btw
+            initial_velocity_y = self.config['initial_velocity_y'].get()  # This returns a string btw
             tag = self.config['tag'].get()
 
             if(mass == ""):
                 messagebox.showerror("Error", "Object must have mass.") 
                 return
-            if(initial_velocity == ""):
-                messagebox.showerror("Error", "Object must have initial velocity")
+            if(initial_velocity_x == ""):
+                messagebox.showerror("Error", "Object must have initial velocity in x direction")
+                return
+            if(initial_velocity_y == ""):
+                messagebox.showerror("Error", "Object must have initial velocity in y direction")
                 return
             if(tag == ""):
                 messagebox.showerror("Error","Object must have a tag (Name)")
@@ -325,9 +331,15 @@ class ObjectManager:
                 return
 
             try:
-                initial_velocity = expression_convert(initial_velocity)
+                initial_velocity_x = expression_convert(initial_velocity_x)
             except ValueError as e:
-                messagebox.showerror("Error", f"{e} (initial velocity)")
+                messagebox.showerror("Error", f"{e} (initial velocity x)")
+                return
+
+            try:
+                initial_velocity_y = expression_convert(initial_velocity_y)
+            except ValueError as e:
+                messagebox.showerror("Error", f"{e} (initial velocity y)")
                 return
 
             # Calculate real coordinate distance
@@ -340,7 +352,7 @@ class ObjectManager:
                 self.canvas,
                 10,
                 mass,
-                Vector2(0, initial_velocity),
+                Vector2(initial_velocity_x, initial_velocity_y),
                 tag,
                 self
             )
@@ -349,7 +361,8 @@ class ObjectManager:
             new_object.draw()
 
             self.config['mass'].delete(0, tk.END)
-            self.config['initial_velocity'].delete(0, tk.END)
+            self.config['initial_velocity_x'].delete(0, tk.END)
+            self.config['initial_velocity_y'].delete(0, tk.END)
             self.config['tag'].delete(0, tk.END)
     
     # Spawn Celestial Object ( a Circle ) with hardcoded values
@@ -386,7 +399,41 @@ class ObjectManager:
 
         self.celestialObjects.append(new_object)
 
+    def clear_planets(self):
+
+        # Make copy to avoid modification when iterating
+        planets_list = self.celestialObjects.copy()
+
+        for planet in planets_list:
+
+            # skip sun
+            if( not planet.sun ):
+                # delete canvas visual elements
+                if( planet.oval_id ):
+                    self.canvas.delete(planet.oval_id)
+                if( planet.orbit_line_id ):
+                    self.canvas.delete(planet.orbit_line_id)
+
+                # delete canvas tags
+                self.canvas.delete(planet.tag)
+                self.canvas.delete(f"{planet.tag}_orbit")
+    
+                # remove event bindings
+                self.canvas.tag_unbind(planet.tag, "<Enter>")
+                self.canvas.tag_unbind(planet.tag, "<Button-1>")
+                self.canvas.tag_unbind(planet.tag, "<Button-3>")
+    
+                # remove from celestialObjects list
+                if( planet in self.celestialObjects ):
+                    self.celestialObjects.remove(planet)
+
+        # Clear selected planet from info frame
+        self.selected_planet = None
+        if( self.clear_callback ):
+            self.clear_callback()
+
     def update_objects(self):
+
 
         if( not self.config['pause'] ):
             orbit_option = self.config['draw_orbit'].get()
@@ -406,4 +453,4 @@ class ObjectManager:
         if( hasattr(self, 'selected_planet') and self.selected_planet ):
             self.update_callback(self.selected_planet)
 
-        self.canvas.after(50, self.update_objects)
+        self.canvas.after(self.settings.SPEED, self.update_objects)
