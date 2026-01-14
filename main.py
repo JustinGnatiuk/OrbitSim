@@ -6,6 +6,7 @@ from celestialobject import ObjectManager, Vector2
 
 WIDTH, HEIGHT = 1200, 675
 
+# Object for Simulation Settings and Constants
 class SimulationSettings():
     def __init__(self):
         # Astronomical Units ( converted to meters )
@@ -25,6 +26,7 @@ class SimulationSettings():
     def SCALE(self):
         return (self.base_pixels_per_au * self.zoom / self.AU) 
 
+# Main Orbit Simulation Object
 class OrbitSimulation:
     def __init__(self,root):
         self.root = root
@@ -32,6 +34,7 @@ class OrbitSimulation:
         self.root.resizable(0,0)
         self.canvas = None
         self.object_manager = None
+        # Config object for planets
         self.object_config = {
             'mass' : None,
             'initial_velocity' : None,
@@ -59,6 +62,7 @@ class OrbitSimulation:
         side_config.pack(side='right', fill='y', expand=False)
         side_config.pack_propagate(False)
 
+        # Populate Side Configuration Bar
         title_label = ttk.Label(
             side_config, 
             text="Python Orbit Simulator", 
@@ -71,11 +75,15 @@ class OrbitSimulation:
         form_frame = ttk.Frame(side_config)
         form_frame.pack(fill='both', expand=True, anchor='nw', padx=0)
 
+        # Populate form input container
+
         # Object mass label and entry form
         mass_label = ttk.Label(form_frame, text='Mass (kg):', anchor='w', font=('Arial', 12))
         mass_label.grid(row=0, column=0, sticky='w', padx=(5,0), pady=5)
         mass_entry = ttk.Entry(form_frame, width=15)
         mass_entry.grid(row=0, column=1, sticky='w', padx=(5,0), pady=5)
+
+        # Set object config mass to mass entry
         self.object_config['mass'] = mass_entry
 
         # Object initial velocity in x direction label and entry form
@@ -83,6 +91,8 @@ class OrbitSimulation:
         initial_velocity_x.grid(row=1, column=0, sticky='w', padx=(5,0), pady=5)
         initial_velocity_x_entry = ttk.Entry(form_frame, width=15)
         initial_velocity_x_entry.grid(row=1, column=1, sticky='w', padx=(5,0), pady=5)
+
+        # Set object config initial_velocity_x to initial velocity x entry
         self.object_config['initial_velocity_x'] = initial_velocity_x_entry
 
         # Object initial velocity in y direction label and entry form
@@ -90,6 +100,8 @@ class OrbitSimulation:
         initial_velocity_y.grid(row=2, column=0, sticky='w', padx=(5,0), pady=5)
         initial_velocity_y_entry = ttk.Entry(form_frame, width=15)
         initial_velocity_y_entry.grid(row=2, column=1, sticky='w', padx=(5,0), pady=5)
+
+        # Set object config initial_velocity_y to initial velocity y entry
         self.object_config['initial_velocity_y'] = initial_velocity_y_entry
 
         # Object radius label and entry form
@@ -97,6 +109,8 @@ class OrbitSimulation:
         radius_label.grid(row=3, column=0, sticky='w', padx=(5,0), pady=5)
         radius_entry = ttk.Entry(form_frame, width=15)
         radius_entry.grid(row=3, column=1, sticky='w', padx=(5,0), pady=5)
+
+        # Set object config radius to radius entry
         self.object_config['radius'] = radius_entry
         
         # Object tag label and entry form
@@ -104,12 +118,16 @@ class OrbitSimulation:
         tag_label.grid(row=4, column=0, sticky='w', padx=(5,0), pady=5)
         tag_entry = ttk.Entry(form_frame, width=15)
         tag_entry.grid(row=4, column=1, sticky='w', padx=(5,0), pady=5)
+
+        # Set object config tag to tag entry
         self.object_config['tag'] = tag_entry
         
         # Orbit Lines label and button
         orbit_var = IntVar()
         orbit_option = ttk.Checkbutton(form_frame, text="Draw Orbits ", variable=orbit_var)
         orbit_option.grid(row=5, column=0, sticky='w', padx=(5,0), pady=5)
+
+        # Set object config draw_orbit flag to state of checkbox ( 1 or 0 )
         self.object_config['draw_orbit'] = orbit_var
 
         # Orbit pause/unpause button
@@ -153,7 +171,6 @@ class OrbitSimulation:
         info_frame.pack(side=tk.LEFT, fill=tk.X, padx=10, pady=10, expand=True)
 
         # Create labels to display planet information
-        # You can customize these based on what data you want to show
         self.info_labels = {}
 
         # Planet name/tag
@@ -209,10 +226,9 @@ class OrbitSimulation:
         # set selected planet of objectManager class
         self.orbit_simulator.selected_planet = planet
 
+        # Set info labels to planet properties
         self.info_labels['tag'].config(text=f"Tag: {planet.tag}")
-
         self.info_labels['mass'].config(text=f"Mass: {planet.mass:.3e} kg")
-        
         self.info_labels['velocity'].config(text=f"Velocity: ( {planet.velocity.x/1000:.1f} , {planet.velocity.y/1000:.1f} ) km/s")
 
         # format position for AU
@@ -224,7 +240,6 @@ class OrbitSimulation:
         au_distance = planet.distance_to_sun / self.simulation_settings.AU
         self.info_labels['distance'].config(text=f"Distance from sun: {au_distance:.3f} AU")
 
-        # Display object radius in pixels
         self.info_labels['radius'].config(text=f"Radius: {planet.base_radius} pixels")
 
     def clear_planet_info(self):
@@ -232,6 +247,7 @@ class OrbitSimulation:
         # clear selected planet of objectManager class
         self.orbit_simulator.selected_planet = None
 
+        # Reset info labels back to default state
         self.info_labels['tag'].config(text="Tag: None")
         self.info_labels['mass'].config(text="Mass: 0.0")
         self.info_labels['velocity'].config(text="Velocity: (0.0, 0.0)")
@@ -242,7 +258,8 @@ class OrbitSimulation:
         
         # update simulation settings zoom value
         self.simulation_settings.zoom = float(value)
-        # remove all orbits for redraw
+
+        # remove all orbit lines and redraw planets
         for planet in self.orbit_simulator.celestialObjects:
             self.canvas.delete(f"{planet.tag}_orbit")
             planet.orbit_line_id = None
@@ -253,13 +270,13 @@ class OrbitSimulation:
             
     def show_info(self):
         
-
+        # If window is already open, reopen it
         if( hasattr(self, 'info_window') and self.info_window.winfo_exists() ):
             self.info_window.lift()
             self.info_window.focus_force()
             return
 
-
+        # Build info window
         self.info_window = tk.Toplevel(self.root)
         self.info_window.title("Simulation Help")
         self.info_window.geometry("500x450")
@@ -341,6 +358,7 @@ Thank you for checking out my simulator!
 
     def clear_planets(self):
         
+        # Call clear planets function in objectManager class
         self.orbit_simulator.clear_planets()
             
 
@@ -348,6 +366,9 @@ Thank you for checking out my simulator!
         self.simulation_settings.SPEED = value
 
     def toggle_pause(self, pause_button):
+
+        # Pause Value 0 : Not paused
+        # Pause Value 1 : Paused
         if( self.object_config['pause'] ):
             pause_button.config(text="Pause")
             self.object_config['pause'] = 0
@@ -390,6 +411,7 @@ Thank you for checking out my simulator!
         # Tangiental velocity ( perpendicular to radius )
         velocity = Vector2(-speed * math.sin(angle), speed * math.cos(angle))
 
+        # Spawn planet with calculated properties
         self.orbit_simulator.spawn_object_hard(
             position,
             radius,
@@ -400,6 +422,7 @@ Thank you for checking out my simulator!
 
     def spawn_planets(self):
 
+        # Spawn Mercury, Venus, Earth, Mars, Jupiter, Saturn
         self.add_planet("Earth", 1.000, 0.0167, 5.9742e24, 15, 90, False)
         self.add_planet("Mercury", 0.387, 0.2056, 3.30e23, 10, 0, True)
         self.add_planet("Venus", 0.723, 0.0068, 4.8685e24, 10, 45, False)
@@ -407,8 +430,9 @@ Thank you for checking out my simulator!
         self.add_planet("Jupiter", 5.203, 0.0489, 1.898e27, 40, 180, False)
         self.add_planet("Saturn", 9.537, 0.0539, 5.683e26, 35, 225, False)
         
-
+    # Begin Simulation
     def start(self):
+
         if self.canvas is None:
             raise ValueError("orbitSim requires a Canvas to run orbital simulation")
         self.orbit_simulator = ObjectManager(
@@ -425,8 +449,10 @@ Thank you for checking out my simulator!
 
 
 if __name__ == "__main__":
+
     print("Welcome to orbitSim")
 
+    # Build root window and initialize OrbitSimulation object with root window
     root = Tk()
     orbit_sim = OrbitSimulation(root)
     orbit_sim.start()

@@ -38,7 +38,7 @@ def expression_convert(expression):
     except:
         raise ValueError("Invalid Expression")
      
-
+# Custom Vector2 Class
 class Vector2:
     def __init__(self, x, y) -> None:
         self.x, self.y = x, y
@@ -133,10 +133,13 @@ class CelestialObject:
         return
 
     def on_click(self, event):
+
+        # Pass planet object to update_planet_info
         self.object_manager.update_callback(self)
 
     def draw(self):
 
+        # If planet doesn't exist yet, create planet on canvas
         if self.oval_id is None:
 
             x1 = self.center.x - self.radius
@@ -148,6 +151,7 @@ class CelestialObject:
             else:
                 self.oval_id = self.canvas.create_oval(x1, y1, x2, y2, fill="black", outline=self.color, tags=(self.tag))
 
+        # If planet already exists, update coordinates of planet
         else:
             x1 = self.center.x - self.radius
             y1 = self.center.y - self.radius
@@ -155,6 +159,7 @@ class CelestialObject:
             y2 = self.center.y + self.radius
             self.canvas.coords(self.oval_id, x1, y1, x2, y2)
 
+    # Gravitational Attraction between 2 Celestial Objects
     def attraction(self, other):
 
         # calculate distance between 2 objects
@@ -167,7 +172,10 @@ class CelestialObject:
             self.distance_to_sun = distance
 
         # Attraction force operations
+        # Gforce = G * ( Mass1 * Mass2 / distance^2 )
         force = self.object_manager.settings.G * self.mass * other.mass / distance ** 2
+
+        # Angle between distance in y direction and x direction
         theta = math.atan2(distance_y, distance_x)
         force_x = math.cos(theta) * force
         force_y = math.sin(theta) * force
@@ -176,6 +184,7 @@ class CelestialObject:
 
 
     # Sum force of attraction between current object and all other celestial objects
+    # Calculate velocity and new position from force of attraction
     def update_position(self, planets):
         
         # Total force by all other planets
@@ -190,6 +199,10 @@ class CelestialObject:
             total_force_y += fy
 
         # Calculate velocity from forces in x,y directions
+        # F = ma
+        # a = v/t
+        # F = m(v/t) -> F = mtv
+        # v = F/mt
         self.velocity += Vector2(total_force_x, total_force_y) / self.mass * self.object_manager.settings.TIMESTEP
 
         # Increment position based on velocity and time
@@ -199,16 +212,18 @@ class CelestialObject:
         # Calculate position on screen based on real position
         self.update_screen_position()
 
-        # Add point for orbit visualization
-        self.orbit.append(Vector2(self.center.x, self.center.y))
+        # Add point for orbit visualization if draw orbit is selected
+        if( self.object_manager.config['draw_orbit'].get() ):
+            self.orbit.append(Vector2(self.center.x, self.center.y))
 
     def draw_orbit(self):
 
+        # Flatten list of orbit vector coordinates into simple list of coordinates
         coords = [coord for v in self.orbit for coord in (v.x, v.y)]
 
         if not coords or len(coords) < 4:
             return
-
+        
         if self.orbit_line_id is None:
             self.orbit_line_id = self.canvas.create_line(
                 *coords,
@@ -289,7 +304,9 @@ class ObjectManager:
         self.celestialObjects = []
         self.config = config
         self.settings = settings
+        # Callback function for update_planet_info
         self.update_callback = update_callback
+        # Callback function for clear_planet_info
         self.clear_callback = clear_callback
         self.selected_planet = None
         self.empty_solar_system = self.canvas.create_text(
@@ -488,6 +505,7 @@ class ObjectManager:
                     if( not orbit_option and planet.orbit_line_id ):
                         self.canvas.delete(f"{planet.tag}_orbit")
                         planet.orbit_line_id = None
+                        planet.orbit = []
 
             if( hasattr(self, 'selected_planet') and self.selected_planet ):
                 self.update_callback(self.selected_planet)
