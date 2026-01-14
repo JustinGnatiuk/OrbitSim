@@ -27,7 +27,7 @@ def expression_convert(expression):
     expression = expression.replace('x', '*')
 
     # Character security check
-    allowed_chars = set("0123456789.*")
+    allowed_chars = set("-0123456789.*")
     if not all(c in allowed_chars for c in expression.replace('**', '')):
         print(expression)
         raise ValueError("Invalid Expression, forbidden characters present")
@@ -177,35 +177,30 @@ class CelestialObject:
 
     # Sum force of attraction between current object and all other celestial objects
     def update_position(self, planets):
-
-        # Ignore the sun, we want it to stay in the middle ( not totally realistic )
-        if( self.sun ):
-            return
-        else:
         
-            # Total force by all other planets
-            total_force_x = total_force_y = 0
+        # Total force by all other planets
+        total_force_x = total_force_y = 0
 
-            # Add up total force by all other planets
-            for planet in planets:
-                if self == planet:
-                    continue
-                fx, fy = self.attraction(planet)
-                total_force_x += fx
-                total_force_y += fy
+        # Add up total force by all other planets
+        for planet in planets:
+            if self == planet:
+                continue
+            fx, fy = self.attraction(planet)
+            total_force_x += fx
+            total_force_y += fy
 
-            # Calculate velocity from forces in x,y directions
-            self.velocity += Vector2(total_force_x, total_force_y) / self.mass * self.object_manager.settings.TIMESTEP
+        # Calculate velocity from forces in x,y directions
+        self.velocity += Vector2(total_force_x, total_force_y) / self.mass * self.object_manager.settings.TIMESTEP
 
-            # Increment position based on velocity and time
-            self.real_position += self.velocity * self.object_manager.settings.TIMESTEP
+        # Increment position based on velocity and time
+        self.real_position += self.velocity * self.object_manager.settings.TIMESTEP
 
 
-            # Calculate position on screen based on real position
-            self.update_screen_position()
+        # Calculate position on screen based on real position
+        self.update_screen_position()
 
-            # Add point for orbit visualization
-            self.orbit.append(Vector2(self.center.x, self.center.y))
+        # Add point for orbit visualization
+        self.orbit.append(Vector2(self.center.x, self.center.y))
 
     def draw_orbit(self):
 
@@ -323,6 +318,7 @@ class ObjectManager:
             mass = self.config['mass'].get()                              # This returns a string btw
             initial_velocity_x = self.config['initial_velocity_x'].get()  # This returns a string btw
             initial_velocity_y = self.config['initial_velocity_y'].get()  # This returns a string btw
+            radius = self.config['radius'].get()                          # This returns a string btw
             tag = self.config['tag'].get()
 
             if(mass == ""):
@@ -334,6 +330,8 @@ class ObjectManager:
             if(initial_velocity_y == ""):
                 messagebox.showerror("Error", "Object must have initial velocity in y direction")
                 return
+            if(radius == ""):
+                messagebox.showerror("Error", "Object must have radius, I suggest between 5 and 20")
             if(tag == ""):
                 messagebox.showerror("Error","Object must have a tag (Name)")
                 return
@@ -365,7 +363,7 @@ class ObjectManager:
             new_object = CelestialObject(
                 Vector2(real_x, real_y), 
                 self.canvas,
-                10,
+                float(radius),
                 mass,
                 Vector2(initial_velocity_x, initial_velocity_y),
                 tag,
@@ -378,6 +376,7 @@ class ObjectManager:
             self.config['mass'].delete(0, tk.END)
             self.config['initial_velocity_x'].delete(0, tk.END)
             self.config['initial_velocity_y'].delete(0, tk.END)
+            self.config['radius'].delete(0, tk.END)
             self.config['tag'].delete(0, tk.END)
     
     # Spawn Celestial Object ( a Circle ) with hardcoded values
@@ -414,6 +413,15 @@ class ObjectManager:
 
         self.celestialObjects.append(new_object)
 
+    def reset_sun_position(self):
+
+        for planet in self.celestialObjects:
+
+            if( planet.sun ):
+
+                planet.real_position = Vector2(0,0)
+                planet.velocity = Vector2(0,0)
+
     def clear_planets(self):
 
         result = messagebox.askyesno("Warning", "Are you sure you want to remove all planets?")
@@ -445,6 +453,8 @@ class ObjectManager:
                     # remove from celestialObjects list
                     if( planet in self.celestialObjects ):
                         self.celestialObjects.remove(planet)
+                else:
+                    self.reset_sun_position()
 
             # Clear selected planet from info frame
             self.selected_planet = None

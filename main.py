@@ -92,27 +92,34 @@ class OrbitSimulation:
         initial_velocity_y_entry = ttk.Entry(form_frame, width=15)
         initial_velocity_y_entry.grid(row=2, column=1, sticky='w', padx=(5,0), pady=5)
         self.object_config['initial_velocity_y'] = initial_velocity_y_entry
+
+        # Object radius label and entry form
+        radius_label = ttk.Label(form_frame, text="Radius (pixels):", anchor='w', font=('Arial', 12))
+        radius_label.grid(row=3, column=0, sticky='w', padx=(5,0), pady=5)
+        radius_entry = ttk.Entry(form_frame, width=15)
+        radius_entry.grid(row=3, column=1, sticky='w', padx=(5,0), pady=5)
+        self.object_config['radius'] = radius_entry
         
         # Object tag label and entry form
         tag_label = ttk.Label(form_frame, text="Tag:", anchor='w', font=('Arial', 12))
-        tag_label.grid(row=3, column=0, sticky='w', padx=(5,0), pady=5)
+        tag_label.grid(row=4, column=0, sticky='w', padx=(5,0), pady=5)
         tag_entry = ttk.Entry(form_frame, width=15)
-        tag_entry.grid(row=3, column=1, sticky='w', padx=(5,0), pady=5)
+        tag_entry.grid(row=4, column=1, sticky='w', padx=(5,0), pady=5)
         self.object_config['tag'] = tag_entry
         
         # Orbit Lines label and button
         orbit_var = IntVar()
         orbit_option = ttk.Checkbutton(form_frame, text="Draw Orbits ", variable=orbit_var)
-        orbit_option.grid(row=4, column=0, sticky='w', padx=(5,0), pady=5)
+        orbit_option.grid(row=5, column=0, sticky='w', padx=(5,0), pady=5)
         self.object_config['draw_orbit'] = orbit_var
 
         # Orbit pause/unpause button
         orbit_pause = ttk.Button(form_frame, text="Pause", command=lambda: self.toggle_pause(orbit_pause))
-        orbit_pause.grid(row=4, column=1, sticky='w', padx=(5,0), pady=5)
+        orbit_pause.grid(row=5, column=1, sticky='w', padx=(5,0), pady=5)
 
         # info button
         info_button = ttk.Button(form_frame, text="Show Info", command=self.show_info)
-        info_button.grid(row=5, column=0, sticky='w', padx=(5,0), pady=5)
+        info_button.grid(row=6, column=0, sticky='w', padx=(5,0), pady=5)
 
         # zoom scale slider
         zoom_scale = tk.Scale(
@@ -126,7 +133,7 @@ class OrbitSimulation:
             command=self.update_zoom
         )
         zoom_scale.set(1.0) # default zoom
-        zoom_scale.grid(row=6, column=0, sticky='w', padx=(5,0), pady=5, columnspan=2)
+        zoom_scale.grid(row=7, column=0, sticky='w', padx=(5,0), pady=5, columnspan=2)
 
         # speed slider
         speed_scale = tk.Scale(
@@ -140,7 +147,7 @@ class OrbitSimulation:
             command=self.update_speed
         )
         speed_scale.set(50) # default speed in ms
-        speed_scale.grid(row=7, column=0, sticky='w', padx=(5,0), pady=5, columnspan=2)
+        speed_scale.grid(row=8, column=0, sticky='w', padx=(5,0), pady=5, columnspan=2)
 
         # Create a frame specifically for planet info in bottom right
         info_frame = ttk.LabelFrame(side_config, text="Planet Information", padding="10", width=100)
@@ -170,13 +177,33 @@ class OrbitSimulation:
         self.info_labels['distance'] = ttk.Label(info_frame, text="Distance from Sun: 0.0")
         self.info_labels['distance'].pack(anchor=tk.W, pady=(5, 0))
 
+        # Object radius in pixels
+        self.info_labels['radius'] = ttk.Label(info_frame, text="Radius: 0")
+        self.info_labels['radius'].pack(anchor=tk.W, pady=(5, 0))
+
         # Clear planets button
         clear_planets = ttk.Button(form_frame, text="Clear Planets", command=self.clear_planets)
-        clear_planets.grid(row=8, column=0, sticky='w', padx=(5,0), pady=5)
+        clear_planets.grid(row=9, column=0, sticky='w', padx=(5,0), pady=5)
 
         # Spawn planets button
         spawn_planets = ttk.Button(form_frame, text="Spawn Planets", command=self.spawn_planets)
-        spawn_planets.grid(row=8, column=1, sticky='w', padx=(5,0), pady=5)
+        spawn_planets.grid(row=9, column=1, sticky='w', padx=(5,0), pady=5)
+
+        # Canvas x,y arrows
+        self.canvas.create_line(10, 10, 10, 50, arrow=tk.LAST, width=1, fill="white")
+        self.canvas.create_line(10, 10, 50, 10, arrow=tk.LAST, width=1, fill="white")
+        self.canvas.create_text(
+                20, 50,                     
+                text="y",  
+                font=("Arial", 8, "bold italic"),  
+                fill="white",                                              
+            )
+        self.canvas.create_text(
+                50, 20,                     
+                text="x",  
+                font=("Arial", 8, "bold italic"),  
+                fill="white",                                              
+            )
 
     def update_planet_info(self, planet):
         
@@ -197,6 +224,9 @@ class OrbitSimulation:
         # format distance to sun for AU
         au_distance = planet.distance_to_sun / self.simulation_settings.AU
         self.info_labels['distance'].config(text=f"Distance from sun: {au_distance:.3f} AU")
+
+        # Display object radius in pixels
+        self.info_labels['radius'].config(text=f"Radius: {planet.base_radius} pixels")
 
     def clear_planet_info(self):
 
@@ -224,7 +254,6 @@ class OrbitSimulation:
             
     def show_info(self):
         
-        # TO DO : FINISH
 
         if( hasattr(self, 'info_window') and self.info_window.winfo_exists() ):
             self.info_window.lift()
@@ -234,7 +263,7 @@ class OrbitSimulation:
 
         self.info_window = tk.Toplevel(self.root)
         self.info_window.title("Simulation Help")
-        self.info_window.geometry("350x400")
+        self.info_window.geometry("500x450")
         self.info_window.transient(self.root)
         self.info_window.resizable(0,0)
 
@@ -250,10 +279,59 @@ class OrbitSimulation:
         scrollbar.pack(side="right", fill="y")
         text_content.config(yscrollcommand=scrollbar.set)
 
-        information = """Welcome!
-1. first instruction
-2. Second instruction
-3. Third instruction
+        information = """Welcome to OrbitSim
+This program simulates the orbits of planets around our sun ( decently )
+The simulation is in 2D space though, so if you're trying to put a man on the moon with this,
+you may need to look elsewhere.
+
+Here's some instructions to get going,
+
+--To Spawn a Planet--
+1. Fill out the mass in kg
+2. Give it an x velocity in km/s
+3. Give it a y velocity in km/s
+4. Give it a radius in pixels ( I suggest between 5-25 )
+5. Give it a name ( tag )
+
+NOTE: values can be expressed in scientific or E notation
+ex : [ 1.5x10^24 ] or [ 1.5e24 ]
+
+SECOND NOTE: Radius is scaled with zoom scale. 
+Base radius is displayed in info window.
+This is so the planets will "shrink" as you zoom out
+Radius = Base_Radius x zoom scale
+
+Orbits can be chaotic. If you give your planet insufficient mass or velocity parameters,
+it's very likely that it will fly into the sun and shoot out of the solar system due to its
+drastic velocity change due to it's proximity to the sun.
+
+If you're having trouble generating a planet with a stable orbit around the sun, go ahead and 
+click the "Spawn Planets" button. This will generate realistic orbits for Mercury, Venus, Earth,
+Mars, Jupiter and Saturn.
+
+You can clear the planets with the "Clear Planets" button.
+
+Adjust the zoom scale ( 0.1 to 2.5 ) to zoom out, in order to see Jupiter and Saturn.
+You can also zoom in as well obviously.
+I didn't implement Uranus or Neptune, they are way too far away from the sun and the scaling
+for the canvas was complex. A better version of this program would implement that and have 
+better scaling.
+
+You can click on any planet to view its planet information in the bottom right. You should be
+able to use these values for reference to generate stable orbits for your planet.
+
+You can adjust the speed of the simulation with the speed slider. This controls the delay of 
+the loop that handles all of the movement and physics. 
+It ranges from 10ms ( Very Fast ) to 100ms ( Very Slow )
+
+Select the "Draw Orbits" checkbox to draw orbits for the planets for better visualization.
+
+Must I explain what the Pause/Continue button does? (:
+
+Thank you for checking out my simulator!
+
+-Jaygnat
+
 
         """
 
