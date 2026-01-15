@@ -23,11 +23,12 @@ Give it a try yourself by reading the "Getting Started" section
     ```
 
 1. Clone this Repo <br>
-  ```bash
-  git clone https://github.com/JustinGnatiuk/OrbitSim.git
-  cd OrbitSim
-  ```
+    ```bash
+    git clone https://github.com/JustinGnatiuk/OrbitSim.git
+    cd OrbitSim
+    ```
   
+
 
 
 
