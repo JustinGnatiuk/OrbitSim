@@ -31,8 +31,9 @@ Give it a try yourself by reading the "Getting Started" section
     ```bash
     ./run.sh
     ```
-3. Tweak settings and planet parameters, then left click on the canvas anywhere to spawn the planet in that location ( or click the "Spawn Planets" button to generate preset planets based on the real planets in our solar system )
+3. Tweak settings and planet parameters, then left click on the canvas anywhere to spawn the planet in that location ( or click the "Spawn Planets" button to generate preset planets based on the real planets in our solar system ) ( Click "Show Info" for further details on usage )
   
+
 
 
 
