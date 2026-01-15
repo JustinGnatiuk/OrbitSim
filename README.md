@@ -1,3 +1,6 @@
-![msrdc_iPAHj0nXog](https://github.com/user-attachments/assets/41233579-13db-4143-95ee-432dd6b7451b)
+# OrbitSim
+### Python 2D Orbit Simulator
+![msrdc_OwZzbTeZ5N](https://github.com/user-attachments/assets/61f62080-bee5-40a1-a707-ac65126f7786)
+
 
 
