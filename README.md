@@ -16,12 +16,13 @@ Give it a try yourself by reading the "Getting Started" section
 - [Python3](https://www.python.org/downloads/)
 - Tkinter GUI Library
   - When installing Python check "tcl/tk and IDLE" under optional features ( Tkinter is packaged with the base Python package on Windows )
-  - or in Linux, <br>
+  - or in Linux, install via CLI with <br>
     ```bash
     sudo apt-get update
     sudo apt-get install python3-tk
     ```
   
+
 
 
 
